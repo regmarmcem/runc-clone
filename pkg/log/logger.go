@@ -33,6 +33,7 @@ func newLogger(debug bool) (*zap.SugaredLogger, error) {
 		Level:       level,
 		Development: debug,
 		Encoding:    "console",
+		NameKey:     "Name",
 	}
 	logger, err := zapConfig.Build()
 	if err != nil {
