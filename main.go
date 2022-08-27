@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
+	l "log"
 	"os"
+
+	"regmarmcem/runc-clone/pkg/log"
 
 	"github.com/urfave/cli/v2"
 )
@@ -29,6 +31,9 @@ func main() {
 		},
 		Action: func(ctx *cli.Context) error {
 			fmt.Printf("Options are %s and %d and %t and %s", ctx.String("mount"), ctx.Int("uid"), ctx.Bool("debug"), ctx.String("command"))
+			if err := log.InitLogger(ctx.Bool("debug")); err != nil {
+				l.Fatal(err)
+			}
 			return nil
 		},
 	}

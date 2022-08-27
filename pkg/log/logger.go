@@ -8,19 +8,16 @@ import (
 )
 
 var (
-	Logger            *zap.SugaredLogger
-	debugOption       bool
-	debugOptionStatus *bool
+	Logger      *zap.SugaredLogger
+	debugOption bool
 )
 
 func InitLogger(debug bool) (err error) {
 	debugOption = debug
-	debugOptionStatus = &debugOption
 	Logger, err = newLogger(debug)
 	if err != nil {
 		return fmt.Errorf("error in new logger: %w", err)
 	}
-	fmt.Println(*debugOptionStatus)
 	return nil
 }
 
@@ -33,23 +30,9 @@ func newLogger(debug bool) (*zap.SugaredLogger, error) {
 	}
 
 	zapConfig := zap.Config{
-		Level:             level,
-		Development:       debug,
-		Encoding:          "console",
-		DisableStacktrace: true,
-		DisableCaller:     true,
-		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "Time",
-			LevelKey:       "Level",
-			NameKey:        "Name",
-			CallerKey:      "Caller",
-			MessageKey:     "Msg",
-			StacktraceKey:  "St",
-			EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-			EncodeTime:     zapcore.ISO8601TimeEncoder,
-			EncodeDuration: zapcore.StringDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
-		},
+		Level:       level,
+		Development: debug,
+		Encoding:    "console",
 	}
 	logger, err := zapConfig.Build()
 	if err != nil {
