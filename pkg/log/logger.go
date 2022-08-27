@@ -30,8 +30,23 @@ func newLogger(debug bool) (*zap.SugaredLogger, error) {
 	}
 
 	zapConfig := zap.Config{
-		Level:       level,
-		Development: debug,
+		Level:             level,
+		Development:       debug,
+		Encoding:          "console",
+		DisableStacktrace: true,
+		DisableCaller:     true,
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "Time",
+			LevelKey:       "Level",
+			NameKey:        "Name",
+			CallerKey:      "Caller",
+			MessageKey:     "Msg",
+			StacktraceKey:  "St",
+			EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
 	}
 	logger, err := zapConfig.Build()
 	if err != nil {
