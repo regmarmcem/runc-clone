@@ -8,16 +8,19 @@ import (
 )
 
 var (
-	Logger      *zap.SugaredLogger
-	debugOption bool
+	Logger            *zap.SugaredLogger
+	debugOption       bool
+	debugOptionStatus *bool
 )
 
 func InitLogger(debug bool) (err error) {
 	debugOption = debug
+	debugOptionStatus = &debugOption
 	Logger, err = newLogger(debug)
 	if err != nil {
 		return fmt.Errorf("error in new logger: %w", err)
 	}
+	fmt.Println(*debugOptionStatus)
 	return nil
 }
 
