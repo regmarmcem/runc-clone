@@ -103,7 +103,7 @@ func Start(ctx *cli.Context) {
 	}
 	log.Logger.Info("Architecture is supported")
 	c := NewContainer(ctx)
-	fmt.Printf("Container is %v\n", c)
+	log.Logger.Infof("Contaienr is %v\n", c)
 	if err = c.create(); err != nil {
 		log.Logger.Infof("Unable to create child process %s", err)
 		os.Exit(1)
