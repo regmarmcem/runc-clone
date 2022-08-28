@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"regmarmcem/runc-clone/pkg/log"
 	"regmarmcem/runc-clone/pkg/util"
 	"strings"
 	"syscall"
+
+	l "log"
 
 	"github.com/urfave/cli/v2"
 )
@@ -33,7 +36,7 @@ func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, soc
 	}
 
 	return &ContainerOpts{
-		argv:     argv,
+		argv:     argv[1:],
 		path:     argv[0],
 		uid:      uid,
 		mountDir: mountDir,
@@ -42,9 +45,9 @@ func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, soc
 }
 
 type Container struct {
-	sockets  [2]int
-	config   ContainerOpts
-	childPid int
+	sockets      [2]int
+	config       ContainerOpts
+	childProcess *exec.Cmd
 }
 
 func NewContainer(ctx *cli.Context) *Container {
@@ -58,18 +61,20 @@ func NewContainer(ctx *cli.Context) *Container {
 	}
 }
 
-func (c Container) create() {
-	fmt.Printf("Create finished")
-	pid, err := ChildProcess(c.config)
+func (c *Container) create() (err error) {
+	fmt.Println("Create finished")
+	cmd, err := ChildProcess(c.config)
 	if err != nil {
 		log.Logger.Infof("Unable to create child process %s", err)
+		return err
 	}
-	c.setPid(pid)
+	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
+	return nil
 }
 
-func (c *Container) setPid(pid int) {
-	c.childPid = pid
+func (c *Container) setProcess(cmd *exec.Cmd) {
+	c.childProcess = cmd
 }
 
 func (c Container) cleanExit() (err error) {
@@ -87,15 +92,39 @@ func (c Container) cleanExit() (err error) {
 }
 
 func Start(ctx *cli.Context) {
+
+	if err := log.InitLogger(ctx.Bool("debug")); err != nil {
+		l.Fatal(err)
+	}
 	err := supported()
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
-	Container := NewContainer(ctx)
-	fmt.Printf("Container is %v\n", Container)
-	Container.create()
-	Container.cleanExit()
+	log.Logger.Info("Architecture is supported")
+	c := NewContainer(ctx)
+	fmt.Printf("Container is %v\n", c)
+	if err = c.create(); err != nil {
+		log.Logger.Infof("Unable to create child process %s", err)
+		os.Exit(1)
+	}
+	log.Logger.Debug("Waiting child process")
+	waitChild(c.childProcess)
+	if err != nil {
+		log.Logger.Infof("Wait child failed %s", err)
+		os.Exit(1)
+	}
+	c.cleanExit()
+}
+
+func waitChild(cmd *exec.Cmd) (err error) {
+
+	err = cmd.Wait()
+	if err != nil {
+		log.Logger.Infof("Unable to wait child process %s", err)
+		return err
+	}
+	return nil
 }
 
 func supported() (err error) {
