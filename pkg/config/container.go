@@ -42,8 +42,9 @@ func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, soc
 }
 
 type Container struct {
-	sockets [2]int
-	config  ContainerOpts
+	sockets  [2]int
+	config   ContainerOpts
+	childPid int
 }
 
 func NewContainer(ctx *cli.Context) *Container {
@@ -51,11 +52,24 @@ func NewContainer(ctx *cli.Context) *Container {
 	// TODO to pass ipc.go
 	// sender := os.NewFile(uintptr(config.fd), "")
 
-	return &Container{config: *config, sockets: sockets}
+	return &Container{
+		config:  *config,
+		sockets: sockets,
+	}
 }
 
 func (c Container) create() {
 	fmt.Printf("Create finished")
+	pid, err := ChildProcess(c.config)
+	if err != nil {
+		log.Logger.Infof("Unable to create child process %s", err)
+	}
+	c.setPid(pid)
+	log.Logger.Debug("Creation finished")
+}
+
+func (c *Container) setPid(pid int) {
+	c.childPid = pid
 }
 
 func (c Container) cleanExit() (err error) {
