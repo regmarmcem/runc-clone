@@ -55,8 +55,17 @@ func (c Container) create() {
 	fmt.Printf("Create finished")
 }
 
-func (c Container) cleanExit() {
+func (c Container) cleanExit() (err error) {
 	fmt.Printf("Cleaning container")
+	if err := syscall.Close(c.sockets[0]); err != nil {
+		log.Logger.Infof("Unable to close write socket %s", err)
+		return err
+	}
+
+	if err := syscall.Close(c.sockets[1]); err != nil {
+		log.Logger.Infof("Unable to close read socket %s", err)
+		return err
+	}
 }
 
 func Start(ctx *cli.Context) {
