@@ -1,8 +1,12 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"log"
+	"os"
 	"strings"
+	"syscall"
 
 	"github.com/urfave/cli/v2"
 )
@@ -46,8 +50,33 @@ func (c Container) cleanExit() {
 }
 
 func Start(ctx *cli.Context) {
+	err := supported()
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
 	Container := NewContainer(ctx)
-	fmt.Printf("Container is %v", Container)
+	fmt.Printf("Container is %v\n", Container)
 	Container.create()
 	Container.cleanExit()
+}
+
+func supported() (err error) {
+	u := syscall.Utsname{}
+	err = syscall.Uname(&u)
+	if err != nil {
+		return err
+	}
+	var a string
+	for _, val := range u.Machine {
+		if val := rune(int(val)); val != rune(0) {
+			a += string(val)
+		}
+	}
+
+	if !(strings.Compare(a, "x86_64") == 0) {
+		return errors.New("x86_64 is only supported architecture")
+	}
+
+	return nil
 }
