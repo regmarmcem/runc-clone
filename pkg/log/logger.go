@@ -9,11 +9,11 @@ import (
 
 var (
 	Logger      *zap.SugaredLogger
-	debugOption bool
+	DebugOption bool
 )
 
 func InitLogger(debug bool) (err error) {
-	debugOption = debug
+	DebugOption = debug
 	Logger, err = newLogger(debug)
 	if err != nil {
 		return fmt.Errorf("error in new logger: %w", err)
@@ -43,7 +43,7 @@ func newLogger(debug bool) (*zap.SugaredLogger, error) {
 }
 
 func Fatal(err error) {
-	if debugOption {
+	if DebugOption {
 		Logger.Fatalf("%+v", err)
 	}
 	Logger.Fatal(err)
