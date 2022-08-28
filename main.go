@@ -5,6 +5,7 @@ import (
 	l "log"
 	"os"
 
+	"regmarmcem/runc-clone/pkg/config"
 	"regmarmcem/runc-clone/pkg/log"
 
 	"github.com/urfave/cli/v2"
@@ -30,10 +31,12 @@ func main() {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			fmt.Printf("Options are %s and %d and %t and %s", ctx.String("mount"), ctx.Int("uid"), ctx.Bool("debug"), ctx.String("command"))
+			fmt.Printf("Options are %s and %d and %t and %s\n", ctx.String("mount"), ctx.Int("uid"), ctx.Bool("debug"), ctx.String("command"))
 			if err := log.InitLogger(ctx.Bool("debug")); err != nil {
 				l.Fatal(err)
 			}
+			fmt.Printf("DebugOption is %t\n", log.DebugOption)
+			config.Start(ctx)
 			return nil
 		},
 	}
