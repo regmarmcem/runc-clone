@@ -109,7 +109,7 @@ func Start(ctx *cli.Context) {
 		os.Exit(1)
 	}
 	log.Logger.Debug("Waiting child process")
-	waitChild(c.childProcess)
+	err = waitChild(c.childProcess)
 	if err != nil {
 		log.Logger.Infof("Wait child failed %s", err)
 		os.Exit(1)
