@@ -3,8 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
+	"regmarmcem/runc-clone/pkg/log"
+	"regmarmcem/runc-clone/pkg/util"
 	"strings"
 	"syscall"
 
@@ -20,25 +21,34 @@ type ContainerOpts struct {
 	argv     []string
 	uid      uint32
 	mountDir string
+	fd       int
 }
 
-func NewOpts(command string, uid uint32, mountDir string) *ContainerOpts {
+func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, sockets [2]int) {
 	argv := strings.Split(command, " ")
+	sockets, err := util.GenerateSocketPair()
+
+	if err != nil {
+		log.Logger.Infof("Failed to generate socke pair. %s", err)
+	}
+
 	return &ContainerOpts{
 		argv:     argv,
 		path:     argv[0],
 		uid:      uid,
 		mountDir: mountDir,
-	}
+		fd:       sockets[1],
+	}, sockets
 }
 
 type Container struct {
-	config ContainerOpts
+	sockets [2]int
+	config  ContainerOpts
 }
 
 func NewContainer(ctx *cli.Context) *Container {
-	config := NewOpts(ctx.String("command"), uint32(ctx.Int("uid")), ctx.Path("mount"))
-	return &Container{config: *config}
+	config, sockets := NewOpts(ctx.String("command"), uint32(ctx.Int("uid")), ctx.Path("mount"))
+	return &Container{config: *config, sockets: sockets}
 }
 
 func (c Container) create() {
