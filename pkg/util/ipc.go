@@ -14,6 +14,7 @@ func SendBoolean(f *os.File, boolean bool) (err error) {
 		log.Logger.Infof("Failed to FileConn: %s", err)
 		return err
 	}
+	defer conn.Close()
 
 	if boolean {
 		data = []byte("1")
@@ -37,6 +38,7 @@ func RecvBoolean(f *os.File) (_ bool, err error) {
 		log.Logger.Infof("Failed to FileConn: %s", err)
 		return false, err
 	}
+	defer conn.Close()
 
 	if _, err = conn.Read(data); err != nil {
 		log.Logger.Infof("Failed to read data: %s", err)
