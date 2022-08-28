@@ -66,6 +66,7 @@ func (c Container) cleanExit() (err error) {
 		log.Logger.Infof("Unable to close read socket %s", err)
 		return err
 	}
+	return nil
 }
 
 func Start(ctx *cli.Context) {
