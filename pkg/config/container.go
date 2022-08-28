@@ -77,7 +77,7 @@ func (c *Container) setProcess(cmd *exec.Cmd) {
 	c.childProcess = cmd
 }
 
-func (c Container) cleanExit() (err error) {
+func (c *Container) cleanExit() (err error) {
 	fmt.Printf("Cleaning container")
 	if err := syscall.Close(c.sockets[0]); err != nil {
 		log.Logger.Infof("Unable to close write socket %s", err)
