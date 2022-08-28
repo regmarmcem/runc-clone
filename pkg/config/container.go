@@ -48,6 +48,9 @@ type Container struct {
 
 func NewContainer(ctx *cli.Context) *Container {
 	config, sockets := NewOpts(ctx.String("command"), uint32(ctx.Int("uid")), ctx.Path("mount"))
+	// TODO to pass ipc.go
+	// sender := os.NewFile(uintptr(config.fd), "")
+
 	return &Container{config: *config, sockets: sockets}
 }
 
