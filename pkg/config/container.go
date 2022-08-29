@@ -25,6 +25,7 @@ type ContainerOpts struct {
 	uid      uint32
 	mountDir string
 	fd       int
+	Hostname string
 }
 
 func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, sockets [2]int) {
@@ -41,6 +42,7 @@ func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, soc
 		uid:      uid,
 		mountDir: mountDir,
 		fd:       sockets[1],
+		Hostname: Hostname(),
 	}, sockets
 }
 
