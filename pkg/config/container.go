@@ -90,6 +90,11 @@ func (c *Container) cleanExit() (err error) {
 		log.Logger.Infof("Unable to close read socket %s", err)
 		return err
 	}
+
+	if err := CleanMounts(c.config.mountDir); err != nil {
+		log.Logger.Infof("Unable to clean mounts %s", err)
+		return err
+	}
 	return nil
 }
 

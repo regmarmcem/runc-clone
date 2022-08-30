@@ -53,6 +53,10 @@ func containerConf(config *ContainerOpts) error {
 		log.Logger.Infof("Unable to set hostname %s", err)
 		return err
 	}
+	if err := SetMountPoint(config.mountDir); err != nil {
+		log.Logger.Infof("Unable to set mount point %s", err)
+		return err
+	}
 	fmt.Println("Succeed in set hostname")
 	return nil
 }
