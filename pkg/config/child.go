@@ -19,6 +19,14 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 		log.Logger.Infof("Unable to set containerConf %s", err)
 		return nil, err
 	}
+	// close one of sockpair: config.fd is sockets[1]
+	err = syscall.Close(config.fd)
+	if err != nil {
+		fmt.Println("Unable to close fd")
+		log.Logger.Infof("Unable to close fd %s", err)
+		return nil, err
+	}
+
 	log.Logger.Info("ChildProcess is started")
 	cmd = exec.Command(config.path, config.argv...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
@@ -58,5 +66,6 @@ func containerConf(config *ContainerOpts) error {
 		return err
 	}
 	fmt.Println("Succeed in set hostname")
+	UserNs(config.fd, config.uid)
 	return nil
 }

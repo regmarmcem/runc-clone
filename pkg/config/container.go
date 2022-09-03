@@ -70,6 +70,7 @@ func (c *Container) create() (err error) {
 		log.Logger.Infof("Unable to create child process %s", err)
 		return err
 	}
+	HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
 	return nil
