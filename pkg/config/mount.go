@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"regmarmcem/runc-clone/pkg/log"
@@ -9,7 +8,7 @@ import (
 )
 
 func SetMountPoint(mountDir string) (err error) {
-	fmt.Println("Pivoting root")
+	log.Logger.Debug("Pivotting root")
 	oldRootTail := "oldroot." + RandomStr(6)
 	newRoot := "/tmp/runc-clone." + RandomStr(12)
 	putOld := newRoot + oldRootTail

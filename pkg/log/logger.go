@@ -23,6 +23,9 @@ func InitLogger(debug bool) (err error) {
 
 func newLogger(debug bool) (*zap.SugaredLogger, error) {
 	level := zap.NewAtomicLevel()
+	stdout := "stdout"
+	stderr := "stderr"
+
 	if debug {
 		level.SetLevel(zapcore.DebugLevel)
 	} else {
@@ -33,6 +36,20 @@ func newLogger(debug bool) (*zap.SugaredLogger, error) {
 		Level:       level,
 		Development: debug,
 		Encoding:    "console",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "Time",
+			LevelKey:       "Level",
+			NameKey:        "Name",
+			CallerKey:      "Caller",
+			MessageKey:     "Msg",
+			StacktraceKey:  "St",
+			EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			EncodeDuration: zapcore.StringDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{stdout},
+		ErrorOutputPaths: []string{stderr},
 	}
 	logger, err := zapConfig.Build()
 	if err != nil {

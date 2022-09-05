@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"regmarmcem/runc-clone/pkg/log"
@@ -64,7 +63,6 @@ func NewContainer(ctx *cli.Context) *Container {
 }
 
 func (c *Container) create() (err error) {
-	fmt.Println("Create finished")
 	cmd, err := ChildProcess(c.config)
 	if err != nil {
 		log.Logger.Infof("Unable to create child process %s", err)
@@ -81,7 +79,7 @@ func (c *Container) setProcess(cmd *exec.Cmd) {
 }
 
 func (c *Container) cleanExit() (err error) {
-	fmt.Printf("Cleaning container")
+	log.Logger.Debug("Creating container")
 	if err := syscall.Close(c.sockets[0]); err != nil {
 		log.Logger.Infof("Unable to close write socket %s", err)
 		return err

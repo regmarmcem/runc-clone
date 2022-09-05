@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
@@ -15,14 +14,12 @@ const STACK_SIZE int = 1024 * 1024
 func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 	err = containerConf(&config)
 	if err != nil {
-		fmt.Println("Unable to containerConf")
 		log.Logger.Infof("Unable to set containerConf %s", err)
 		return nil, err
 	}
 	// close one of sockpair: config.fd is sockets[1]
 	err = syscall.Close(config.fd)
 	if err != nil {
-		fmt.Println("Unable to close fd")
 		log.Logger.Infof("Unable to close fd %s", err)
 		return nil, err
 	}
@@ -32,7 +29,7 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
 	user, err := user.LookupId(strconv.Itoa(int(config.uid)))
 	if err != nil {
-		fmt.Println("LookupId failed")
+		log.Logger.Info("LookupId failed")
 		os.Exit(1)
 	}
 
@@ -40,14 +37,14 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 	gidi, err = strconv.Atoi(user.Gid)
 
 	if err != nil {
-		fmt.Println("gid is invalid")
+		log.Logger.Info("gid is invalid")
 		os.Exit(1)
 	}
 
 	gid := uint32(gidi)
 	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: config.uid, Gid: gid}
 	if err = cmd.Start(); err != nil {
-		fmt.Println("run process failed!!")
+		log.Logger.Info("run process failed")
 		os.Exit(1)
 	}
 	log.Logger.Info("process start!!")
@@ -57,7 +54,6 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 
 func containerConf(config *ContainerOpts) error {
 	if err := syscall.Sethostname([]byte(config.Hostname)); err != nil {
-		fmt.Printf("Unable to set hostname %s\n", err)
 		log.Logger.Infof("Unable to set hostname %s", err)
 		return err
 	}
@@ -65,7 +61,7 @@ func containerConf(config *ContainerOpts) error {
 		log.Logger.Infof("Unable to set mount point %s", err)
 		return err
 	}
-	fmt.Println("Succeed in set hostname")
+	log.Logger.Info("succeed in set hostname")
 	UserNs(config.fd, config.uid)
 	return nil
 }
