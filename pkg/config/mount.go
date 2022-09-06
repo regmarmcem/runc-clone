@@ -8,30 +8,49 @@ import (
 )
 
 func SetMountPoint(mountDir string) (err error) {
-	log.Logger.Debug("Pivotting root")
-	oldRootTail := "oldroot." + RandomStr(6)
+	log.Logger.Debug("Setting mount points..")
 	newRoot := "/tmp/runc-clone." + RandomStr(12)
-	putOld := newRoot + oldRootTail
-	oldRoot := "/" + oldRootTail
+	log.Logger.Debugf("Mounting temp directory %s", newRoot)
+	CreateDir(newRoot)
+	err = MountDir(mountDir, newRoot, uintptr(syscall.MS_BIND|syscall.MS_REC|syscall.MS_PRIVATE))
+	if err != nil {
+		log.Logger.Infof("Cannot mount dir %s\n", err)
+		os.Exit(1)
+		return err
+	}
 
-	if err := os.Chdir("/"); err != nil {
+	log.Logger.Debug("Pivoting root")
+	oldRootTail := "oldroot." + RandomStr(6)
+	putOld := newRoot + "/" + oldRootTail
+
+	err = CreateDir(putOld)
+	if err != nil {
+		log.Logger.Infof("Cannot create dir %s\n", err)
+		os.Exit(1)
+		return err
+	}
+
+	log.Logger.Debugf("newRoot: %s, putOld: %s\n", newRoot, putOld)
+	err = syscall.PivotRoot(newRoot, putOld)
+	if err != nil {
+		log.Logger.Infof("Cannot pivot root %s\n", err)
+		os.Exit(1)
+		return err
+	}
+
+	log.Logger.Debug("Unmounting old root")
+	oldRoot := "/" + oldRootTail
+	err = syscall.Chdir("/")
+	if err != nil {
+		log.Logger.Info("MountError")
+		os.Exit(1)
 		return err
 	}
 
 	UnmountPath(oldRoot)
 	DeleteDir(oldRoot)
 
-	err = CreateDir(putOld)
-	if err != nil {
-		log.Logger.Infof("Cannot create dir %s\n", err)
-		return err
-	}
-
-	MountDir("", "/", syscall.MS_REC|syscall.MS_PRIVATE)
-	if err != nil {
-		log.Logger.Infof("Cannot mount dir %s\n", err)
-		return err
-	}
+	log.Logger.Debug("Unmount finished")
 
 	return nil
 }
@@ -45,6 +64,7 @@ func MountDir(path string, mountPoint string, flags uintptr) (err error) {
 		log.Logger.Infof("Cannot mount %s to %s: %s\n", path, mountPoint, err)
 		return err
 	}
+	log.Logger.Debug("Mount succeess!!")
 	return nil
 }
 
