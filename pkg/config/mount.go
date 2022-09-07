@@ -7,7 +7,19 @@ import (
 	"syscall"
 )
 
+func Exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
 func SetMountPoint(mountDir string) (err error) {
+	log.Logger.Debug("Investigating...")
+	f := mountDir + "/sbin/pivot_root"
+	if !Exists(f) {
+		log.Logger.Debug("pivot_root not found")
+		os.Exit(1)
+	}
+
 	log.Logger.Debug("Setting mount points..")
 	newRoot := "/tmp/runc-clone." + RandomStr(12)
 	log.Logger.Debugf("Mounting temp directory %s", newRoot)
