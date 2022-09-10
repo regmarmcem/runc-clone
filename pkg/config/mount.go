@@ -8,11 +8,25 @@ import (
 )
 
 func SetMountPoint(mountDir string) (err error) {
+	// log.Logger.Debug("Investigating...")
+	// f := mountDir + "/sbin/pivot_root"
+	// if !Exists(f) {
+	// 	log.Logger.Debug("pivot_root not found")
+	// 	os.Exit(1)
+	// }
+
 	log.Logger.Debug("Setting mount points..")
+	err = MountDir("", "/", uintptr(syscall.MS_REC|syscall.MS_PRIVATE))
+	if err != nil {
+		log.Logger.Infof("Cannot mount dir %s\n", err)
+		os.Exit(1)
+		return err
+	}
+
 	newRoot := "/tmp/runc-clone." + RandomStr(12)
 	log.Logger.Debugf("Mounting temp directory %s", newRoot)
 	CreateDir(newRoot)
-	err = MountDir(mountDir, newRoot, uintptr(syscall.MS_BIND|syscall.MS_REC|syscall.MS_PRIVATE))
+	err = MountDir(mountDir, newRoot, uintptr(syscall.MS_BIND|syscall.MS_PRIVATE))
 	if err != nil {
 		log.Logger.Infof("Cannot mount dir %s\n", err)
 		os.Exit(1)
