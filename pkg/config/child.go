@@ -3,9 +3,7 @@ package config
 import (
 	"os"
 	"os/exec"
-	"os/user"
 	"regmarmcem/runc-clone/pkg/log"
-	"strconv"
 	"syscall"
 )
 
@@ -18,7 +16,7 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 		return nil, err
 	}
 	// close one of sockpair: config.fd is sockets[1]
-	err = syscall.Close(config.fd)
+	// err = syscall.Close(config.fd)
 	if err != nil {
 		log.Logger.Infof("Unable to close fd %s", err)
 		return nil, err
@@ -26,29 +24,31 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 
 	log.Logger.Info("ChildProcess is started")
 	cmd = exec.Command(config.path, config.argv...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
-	user, err := user.LookupId(strconv.Itoa(int(config.uid)))
-	if err != nil {
-		log.Logger.Info("LookupId failed")
-		os.Exit(1)
-	}
 
-	var gidi int
-	gidi, err = strconv.Atoi(user.Gid)
+	// user, err := user.LookupId(strconv.Itoa(int(config.uid)))
+	// if err != nil {
+	// log.Logger.Info("LookupId failed")
+	// os.Exit(1)
+	// }
 
-	if err != nil {
-		log.Logger.Info("gid is invalid")
-		os.Exit(1)
-	}
+	// var gidi int
+	// gidi, err = strconv.Atoi(user.Gid)
 
-	gid := uint32(gidi)
-	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: config.uid, Gid: gid}
+	// if err != nil {
+	// log.Logger.Info("gid is invalid")
+	// os.Exit(1)
+	// }
+
+	// gid := uint32(gidi)
+	// cmd.SysProcAttr = &syscall.SysProcAttr{}
+	// cmd.SysProcAttr.Credential = &syscall.Credential{Uid: config.uid, Gid: gid}
+
+	log.Logger.Infof("cmd is %v\n", cmd)
 	if err = cmd.Start(); err != nil {
-		log.Logger.Info("run process failed")
+		log.Logger.Infof("run process failed %s", err)
 		os.Exit(1)
 	}
 	log.Logger.Info("process start!!")
-	log.Logger.Infof("cmd is %v\n", cmd)
 	return cmd, nil
 }
 
@@ -62,6 +62,6 @@ func containerConf(config *ContainerOpts) error {
 		return err
 	}
 	log.Logger.Info("succeed in set hostname")
-	UserNs(config.fd, config.uid)
+	// UserNs(config.fd, config.uid)
 	return nil
 }
