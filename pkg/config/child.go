@@ -24,6 +24,16 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 
 	log.Logger.Info("ChildProcess is started")
 	cmd = exec.Command(config.path, config.argv...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Dir = config.mountDir
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Cloneflags: syscall.CLONE_NEWNS |
+			syscall.CLONE_NEWPID |
+			syscall.CLONE_NEWIPC |
+			syscall.CLONE_NEWUTS,
+	}
 
 	// user, err := user.LookupId(strconv.Itoa(int(config.uid)))
 	// if err != nil {
@@ -57,10 +67,10 @@ func containerConf(config *ContainerOpts) error {
 		log.Logger.Infof("Unable to set hostname %s", err)
 		return err
 	}
-	if err := SetMountPoint(config.mountDir); err != nil {
-		log.Logger.Infof("Unable to set mount point %s", err)
-		return err
-	}
+	// if err := SetMountPoint(config.mountDir); err != nil {
+	// log.Logger.Infof("Unable to set mount point %s", err)
+	// return err
+	// }
 	log.Logger.Info("succeed in set hostname")
 	// UserNs(config.fd, config.uid)
 	return nil
