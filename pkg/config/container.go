@@ -68,7 +68,10 @@ func (c *Container) create() (err error) {
 		log.Logger.Infof("Unable to create child process %s", err)
 		return err
 	}
-	HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
+	log.Logger.Infof("runc-cloneのppid %s", os.Getppid())
+	log.Logger.Infof("runc-cloneのpid %s", os.Getpid())
+	log.Logger.Infof("runcの子プロセスのpid %s", cmd.Process.Pid)
+	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
 	return nil
@@ -79,12 +82,13 @@ func (c *Container) setProcess(cmd *exec.Cmd) {
 }
 
 func (c *Container) cleanExit() (err error) {
-	log.Logger.Debug("Creating container")
+	log.Logger.Debug("Exiting...")
 	if err := syscall.Close(c.sockets[0]); err != nil {
 		log.Logger.Infof("Unable to close write socket %s", err)
 		return err
 	}
 
+	log.Logger.Debugf("c.sockets is %t", c.sockets)
 	if err := syscall.Close(c.sockets[1]); err != nil {
 		log.Logger.Infof("Unable to close read socket %s", err)
 		return err
@@ -115,10 +119,12 @@ func Start(ctx *cli.Context) {
 		os.Exit(1)
 	}
 	log.Logger.Debug("Waiting child process")
+	log.Logger.Debugf("Child Process is %t", c.childProcess)
+	log.Logger.Debugf("Child Process is %t", c.childProcess.Process.Pid)
 	err = waitChild(c.childProcess)
 	if err != nil {
 		log.Logger.Infof("Wait child failed %s", err)
-		os.Exit(1)
+		// os.Exit(1)
 	}
 	c.cleanExit()
 }
