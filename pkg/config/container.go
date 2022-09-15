@@ -22,7 +22,7 @@ type ContainerOpts struct {
 	path     string
 	argv     []string
 	uid      uint32
-	mountDir string
+	MountDir string
 	fd       int
 	Hostname string
 }
@@ -39,7 +39,7 @@ func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, soc
 		argv:     argv[1:],
 		path:     argv[0],
 		uid:      uid,
-		mountDir: mountDir,
+		MountDir: mountDir,
 		fd:       sockets[1],
 		Hostname: Hostname(),
 	}, sockets
@@ -94,7 +94,7 @@ func (c *Container) cleanExit() (err error) {
 		return err
 	}
 
-	if err := CleanMounts(c.config.mountDir); err != nil {
+	if err := CleanMounts(c.config.MountDir); err != nil {
 		log.Logger.Infof("Unable to clean mounts %s", err)
 		return err
 	}
@@ -127,6 +127,31 @@ func Start(ctx *cli.Context) {
 		// os.Exit(1)
 	}
 	c.cleanExit()
+}
+
+func Initialize(args []string) error {
+	log.Logger.Debugf("args is %s", args)
+	config := &ContainerOpts{
+		argv:     args[1:],
+		path:     args[0],
+		uid:      0,
+		MountDir: "./bundle/rootfs",
+		fd:       2,
+		Hostname: Hostname(),
+	}
+	log.Logger.Debug("runc-clone initialize method")
+	cmd, err := ExecProcess(*config)
+	if err != nil {
+		log.Logger.Infof("Unable to create child process %s", err)
+		return err
+	}
+	log.Logger.Infof("runc-cloneのppid %s", os.Getppid())
+	log.Logger.Infof("runc-cloneのpid %s", os.Getpid())
+	log.Logger.Infof("runcの子プロセスのpid %s", cmd.Process.Pid)
+	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
+	log.Logger.Debug("Creation finished")
+	return nil
+
 }
 
 func waitChild(cmd *exec.Cmd) (err error) {
