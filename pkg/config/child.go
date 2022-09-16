@@ -9,18 +9,6 @@ import (
 
 const STACK_SIZE int = 1024 * 1024
 
-func createDirsIfDontExist(dirs []string) error {
-	for _, dir := range dirs {
-		if _, err := os.Stat(dir); os.IsNotExist(err) {
-			if err = os.MkdirAll(dir, 0755); err != nil {
-				log.Logger.Infof("Error creating directory: %v\n", err)
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 
 	log.Logger.Debugf("config is %t", config)
