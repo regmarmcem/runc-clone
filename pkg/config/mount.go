@@ -13,13 +13,8 @@ func Exists(filename string) bool {
 }
 
 func SetMountPoint(mountDir string) (err error) {
-	log.Logger.Debug("Investigating...")
-	f := mountDir + "/sbin/pivot_root"
-	if !Exists(f) {
-		log.Logger.Debug("pivot_root not found")
-		os.Exit(1)
-	}
 
+	log.Logger.Debugf("mountDir is %s", mountDir)
 	log.Logger.Debug("Setting mount points..")
 	err = MountDir("", "/", uintptr(syscall.MS_REC|syscall.MS_PRIVATE))
 	if err != nil {

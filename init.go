@@ -1,8 +1,6 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	l "log"
 	"os"
 	"regmarmcem/runc-clone/pkg/config"
@@ -16,16 +14,12 @@ var initCommand = &cli.Command{
 	Usage:       "initialize a container",
 	Description: "initialize a container",
 	Action: func(ctx *cli.Context) error {
-		fs := flag.FlagSet{}
-		fmt.Printf("args %s\n", os.Args)
-		if err := fs.Parse(os.Args[2:]); err != nil {
-			fmt.Println("Error parsing: ", err)
-		}
-		fmt.Printf("printf runc-clone init")
 		if err := log.InitLogger(true); err != nil {
 			l.Fatal(err)
 		}
-		config.Initialize(os.Args)
+		log.Logger.Debugf("args %s\n", os.Args)
+		log.Logger.Debugf("printf runc-clone init")
+		config.Initialize(os.Args[2:])
 		return nil
 	},
 }

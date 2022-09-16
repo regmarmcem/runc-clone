@@ -68,9 +68,6 @@ func (c *Container) create() (err error) {
 		log.Logger.Infof("Unable to create child process %s", err)
 		return err
 	}
-	log.Logger.Infof("runc-cloneのppid %s", os.Getppid())
-	log.Logger.Infof("runc-cloneのpid %s", os.Getpid())
-	log.Logger.Infof("runcの子プロセスのpid %s", cmd.Process.Pid)
 	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
@@ -135,7 +132,7 @@ func Initialize(args []string) error {
 		argv:     args[1:],
 		path:     args[0],
 		uid:      0,
-		MountDir: "./bundle/rootfs",
+		MountDir: "bundle/rootfs",
 		fd:       2,
 		Hostname: Hostname(),
 	}
@@ -145,9 +142,12 @@ func Initialize(args []string) error {
 		log.Logger.Infof("Unable to create child process %s", err)
 		return err
 	}
-	log.Logger.Infof("runc-cloneのppid %s", os.Getppid())
-	log.Logger.Infof("runc-cloneのpid %s", os.Getpid())
-	log.Logger.Infof("runcの子プロセスのpid %s", cmd.Process.Pid)
+	err = waitChild(cmd)
+	if err != nil {
+		log.Logger.Infof("Wait child failed %s", err)
+		// os.Exit(1)
+	}
+
 	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	log.Logger.Debug("Creation finished")
 	return nil

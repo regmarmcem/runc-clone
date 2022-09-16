@@ -36,7 +36,8 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 	}
 
 	log.Logger.Debugf("config.argv= %s", config.argv)
-	args := append([]string{"init"}, config.argv...)
+	args := append([]string{"init"}, config.path)
+	args = append(args, config.argv...)
 	cmd = exec.Command("/proc/self/exe", args...)
 	log.Logger.Debugf("cmd %s", cmd)
 	cmd.Env = []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
@@ -95,15 +96,14 @@ func ExecProcess(c ContainerOpts) (cmd *exec.Cmd, err error) {
 	}
 
 	log.Logger.Info("ChildProcess is started")
-	log.Logger.Debugf("config.path is %s", c.argv[0])
-	log.Logger.Debugf("config.argv is %s", c.argv[1:])
-	cmd = exec.Command(c.argv[0], c.argv[1:]...)
+	log.Logger.Debugf("config.path is %s", c.path)
+	log.Logger.Debugf("config.argv is %s", c.argv)
+	cmd = exec.Command(c.path, c.argv...)
 	log.Logger.Debugf("cmd %s", cmd)
 	cmd.Env = []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Dir = c.MountDir
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWNS |
 			syscall.CLONE_NEWPID |
