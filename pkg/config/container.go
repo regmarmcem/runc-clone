@@ -63,12 +63,12 @@ func NewContainer(ctx *cli.Context) *Container {
 }
 
 func (c *Container) create() (err error) {
-	cmd, err := ChildProcess(c.config)
+	cmd, err := ExecProcess(c.config)
 	if err != nil {
 		log.Logger.Infof("Unable to create child process %s", err)
 		return err
 	}
-	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
+	HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
 	return nil
@@ -99,59 +99,40 @@ func (c *Container) cleanExit() (err error) {
 }
 
 func Start(ctx *cli.Context) {
-
+	cmd, err := ChildProcess(ctx)
 	if err := log.InitLogger(ctx.Bool("debug")); err != nil {
 		l.Fatal(err)
 	}
-	err := supported()
+	err = supported()
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
 	}
 	log.Logger.Info("Architecture is supported")
-	c := NewContainer(ctx)
-	log.Logger.Infof("Contaienr is %v\n", c)
-	if err = c.create(); err != nil {
-		log.Logger.Infof("Unable to create child process %s", err)
-		os.Exit(1)
-	}
-	log.Logger.Debug("Waiting child process")
-	log.Logger.Debugf("Child Process is %t", c.childProcess)
-	log.Logger.Debugf("Child Process is %t", c.childProcess.Process.Pid)
-	err = waitChild(c.childProcess)
-	if err != nil {
-		log.Logger.Infof("Wait child failed %s", err)
-		// os.Exit(1)
-	}
-	c.cleanExit()
-}
-
-func Initialize(args []string) error {
-	log.Logger.Debugf("args is %s", args)
-	config := &ContainerOpts{
-		argv:     args[1:],
-		path:     args[0],
-		uid:      0,
-		MountDir: "bundle/rootfs",
-		fd:       2,
-		Hostname: Hostname(),
-	}
-	log.Logger.Debug("runc-clone initialize method")
-	cmd, err := ExecProcess(*config)
-	if err != nil {
-		log.Logger.Infof("Unable to create child process %s", err)
-		return err
-	}
 	err = waitChild(cmd)
 	if err != nil {
 		log.Logger.Infof("Wait child failed %s", err)
 		// os.Exit(1)
 	}
+}
 
-	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
+func Initialize(ctx *cli.Context) {
+
+	c := NewContainer(ctx)
+	log.Logger.Infof("Contaienr is %v\n", c)
+	if err := c.create(); err != nil {
+		log.Logger.Infof("Unable to create child process %s", err)
+		os.Exit(1)
+	}
+	log.Logger.Debug("runc-clone initialize method")
+	if err := waitChild(c.childProcess); err != nil {
+		log.Logger.Infof("Wait child failed %s", err)
+		// os.Exit(1)
+	}
+
+	// HandleChildUidMap(c.childProcess.Process.Pid, c.sockets[0])
 	log.Logger.Debug("Creation finished")
-	return nil
-
+	c.cleanExit()
 }
 
 func waitChild(cmd *exec.Cmd) (err error) {

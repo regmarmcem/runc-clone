@@ -5,27 +5,26 @@ import (
 	"os/exec"
 	"regmarmcem/runc-clone/pkg/log"
 	"syscall"
+
+	"github.com/urfave/cli/v2"
 )
 
 const STACK_SIZE int = 1024 * 1024
 
-func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
+func ChildProcess(ctx *cli.Context) (cmd *exec.Cmd, err error) {
 
-	log.Logger.Debugf("config is %t", config)
+	log.Logger.Debugf("config is %t", ctx)
 	if err != nil {
 		log.Logger.Infof("Unable to set containerConf %s", err)
 		return nil, err
 	}
-	// close one of sockpair: config.fd is sockets[1]
-	// err = syscall.Close(config.fd)
 	if err != nil {
 		log.Logger.Infof("Unable to close fd %s", err)
 		return nil, err
 	}
 
-	log.Logger.Debugf("config.argv= %s", config.argv)
-	args := append([]string{"init"}, config.path)
-	args = append(args, config.argv...)
+	log.Logger.Debugf("config.argv= %s", ctx)
+	args := append([]string{"init"}, "--command", ctx.String("command"), "--uid", ctx.String("uid"), "--mount", ctx.Path("mount"))
 	cmd = exec.Command("/proc/self/exe", args...)
 	log.Logger.Debugf("cmd %s", cmd)
 	cmd.Env = []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
@@ -39,24 +38,6 @@ func ChildProcess(config ContainerOpts) (cmd *exec.Cmd, err error) {
 			syscall.CLONE_NEWNET |
 			syscall.CLONE_NEWUTS,
 	}
-
-	// user, err := user.LookupId(strconv.Itoa(int(config.uid)))
-	// if err != nil {
-	// log.Logger.Info("LookupId failed")
-	// os.Exit(1)
-	// }
-
-	// var gidi int
-	// gidi, err = strconv.Atoi(user.Gid)
-
-	// if err != nil {
-	// log.Logger.Info("gid is invalid")
-	// os.Exit(1)
-	// }
-
-	// gid := uint32(gidi)
-	// cmd.SysProcAttr = &syscall.SysProcAttr{}
-	// cmd.SysProcAttr.Credential = &syscall.Credential{Uid: config.uid, Gid: gid}
 
 	log.Logger.Infof("cmd is %v\n", cmd)
 	log.Logger.Infof("cmd sysprocattr %v\n", cmd.SysProcAttr.Cloneflags)
@@ -83,9 +64,6 @@ func ExecProcess(c ContainerOpts) (cmd *exec.Cmd, err error) {
 		return nil, err
 	}
 
-	log.Logger.Info("ChildProcess is started")
-	log.Logger.Debugf("config.path is %s", c.path)
-	log.Logger.Debugf("config.argv is %s", c.argv)
 	cmd = exec.Command(c.path, c.argv...)
 	log.Logger.Debugf("cmd %s", cmd)
 	cmd.Env = []string{"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
@@ -139,6 +117,6 @@ func containerConf(config ContainerOpts) error {
 		return err
 	}
 	log.Logger.Info("succeed in set hostname")
-	// UserNs(config.fd, config.uid)
+	UserNs(config.fd, config.uid)
 	return nil
 }
