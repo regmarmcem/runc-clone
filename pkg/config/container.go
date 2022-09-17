@@ -100,7 +100,7 @@ func (c *Container) cleanExit() (err error) {
 
 func Start(ctx *cli.Context) {
 	cmd, err := ChildProcess(ctx)
-	if err := log.InitLogger(ctx.Bool("debug")); err != nil {
+	if err != nil {
 		l.Fatal(err)
 	}
 	err = supported()
