@@ -68,6 +68,8 @@ func (c *Container) create() (err error) {
 		log.Logger.Infof("Unable to create child process %s", err)
 		return err
 	}
+
+	log.Logger.Infof("calling handlechilduidmap: %s", c.sockets[0])
 	HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
@@ -130,7 +132,7 @@ func Initialize(ctx *cli.Context) {
 		// os.Exit(1)
 	}
 
-	// HandleChildUidMap(c.childProcess.Process.Pid, c.sockets[0])
+	HandleChildUidMap(c.childProcess.Process.Pid, c.sockets[0])
 	log.Logger.Debug("Creation finished")
 	c.cleanExit()
 }

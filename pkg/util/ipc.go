@@ -31,21 +31,22 @@ func SendBoolean(fd int, boolean bool) (err error) {
 	return nil
 }
 
-func RecvBoolean(fd int) (_ bool, err error) {
+func RecvBoolean(fd int) bool {
 	data := []byte("0")
 	var conn net.Conn
+	var err error
 
 	f := os.NewFile(uintptr(fd), "")
 	if conn, err = net.FileConn(f); err != nil {
 		log.Logger.Infof("Failed to FileConn: %s", err)
-		return false, err
+		return false
 	}
 	defer conn.Close()
 
 	if _, err = conn.Read(data); err != nil {
 		log.Logger.Infof("Failed to read data: %s", err)
-		return false, err
+		return false
 	}
 
-	return true, nil
+	return true
 }

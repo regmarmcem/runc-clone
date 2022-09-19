@@ -3,7 +3,9 @@ package config
 import (
 	"os"
 	"os/exec"
+	"os/user"
 	"regmarmcem/runc-clone/pkg/log"
+	"strconv"
 	"syscall"
 
 	"github.com/urfave/cli/v2"
@@ -58,7 +60,8 @@ func ExecProcess(c ContainerOpts) (cmd *exec.Cmd, err error) {
 		return nil, err
 	}
 	// close one of sockpair: config.fd is sockets[1]
-	// err = syscall.Close(config.fd)
+	log.Logger.Infof("Closing c.fd")
+	err = syscall.Close(c.fd)
 	if err != nil {
 		log.Logger.Infof("Unable to close fd %s", err)
 		return nil, err
@@ -78,23 +81,23 @@ func ExecProcess(c ContainerOpts) (cmd *exec.Cmd, err error) {
 			syscall.CLONE_NEWUTS,
 	}
 
-	// user, err := user.LookupId(strconv.Itoa(int(config.uid)))
-	// if err != nil {
-	// log.Logger.Info("LookupId failed")
-	// os.Exit(1)
-	// }
+	user, err := user.LookupId(strconv.Itoa(int(c.uid)))
+	if err != nil {
+		log.Logger.Info("LookupId failed")
+		os.Exit(1)
+	}
 
-	// var gidi int
-	// gidi, err = strconv.Atoi(user.Gid)
+	var gidi int
+	gidi, err = strconv.Atoi(user.Gid)
 
-	// if err != nil {
-	// log.Logger.Info("gid is invalid")
-	// os.Exit(1)
-	// }
+	if err != nil {
+		log.Logger.Info("gid is invalid")
+		os.Exit(1)
+	}
 
-	// gid := uint32(gidi)
-	// cmd.SysProcAttr = &syscall.SysProcAttr{}
-	// cmd.SysProcAttr.Credential = &syscall.Credential{Uid: config.uid, Gid: gid}
+	gid := uint32(gidi)
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
+	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: c.uid, Gid: gid}
 
 	log.Logger.Infof("cmd is %v\n", cmd)
 	log.Logger.Infof("cmd sysprocattr %v\n", cmd.SysProcAttr.Cloneflags)

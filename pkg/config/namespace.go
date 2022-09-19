@@ -24,22 +24,22 @@ func UserNs(fd int, uid uint32) error {
 	util.SendBoolean(fd, true)
 
 	var b bool
-	b, err = util.RecvBoolean(fd)
-	if err != nil {
-		log.Logger.Infof("Unable to recvboolean %s", err)
-		return err
-	}
+	r := make(chan bool)
+	go func() {
+		r <- util.RecvBoolean(fd)
+	}()
 
 	if b {
 		return errors.New("create namespace")
 	}
 
-	user, err := user.LookupId(strconv.Itoa(int(uid)))
+	var u *user.User
+	u, err = user.LookupId(strconv.Itoa(int(uid)))
 	if err != nil {
 		log.Logger.Infof("Unable to lookupid %s", err)
 		return err
 	}
-	g, err := user.GroupIds()
+	g, err := u.GroupIds()
 	if err != nil {
 		log.Logger.Infof("Unable to get groupids %s", err)
 		return err
@@ -53,7 +53,9 @@ func UserNs(fd int, uid uint32) error {
 		}
 		gids = append(gids, id)
 	}
-	u, err := strconv.Atoi(user.Uid)
+
+	var uid_i int
+	uid_i, err = strconv.Atoi(u.Uid)
 	if err != nil {
 		log.Logger.Infof("failed to Atoi %s", uid)
 		return err
@@ -61,18 +63,19 @@ func UserNs(fd int, uid uint32) error {
 
 	syscall.Setgroups(gids)
 	syscall.Setresgid(gids[0], gids[1], gids[2])
-	syscall.Setresuid(u, u, u)
+	syscall.Setresuid(uid_i, uid_i, uid_i)
 
 	return nil
 }
 
 func HandleChildUidMap(pid int, fd int) error {
-	r, err := util.RecvBoolean(fd)
-	if err != nil {
-		log.Logger.Infof("Unable to recv boolean %s", err)
-		return err
-	}
-	if r {
+
+	r := make(chan bool)
+	go func() {
+		r <- util.RecvBoolean(fd)
+	}()
+
+	if ok := <-r; ok {
 		// UID/GID map
 		uf, err := os.Create(fmt.Sprintf("/proc/%d/%s", pid, "uid_map"))
 		if err != nil {
