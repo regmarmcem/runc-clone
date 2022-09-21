@@ -21,13 +21,13 @@ var (
 type ContainerOpts struct {
 	path     string
 	argv     []string
-	uid      uint32
+	uid      int
 	MountDir string
-	fd       int
+	fd       *os.File
 	Hostname string
 }
 
-func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, sockets [2]int) {
+func NewOpts(command string, uid int, mountDir string) (_ *ContainerOpts, sockets [2]*os.File) {
 	argv := strings.Split(command, " ")
 	sockets, err := util.GenerateSocketPair()
 
@@ -46,13 +46,13 @@ func NewOpts(command string, uid uint32, mountDir string) (_ *ContainerOpts, soc
 }
 
 type Container struct {
-	sockets      [2]int
+	sockets      [2]*os.File
 	config       ContainerOpts
 	childProcess *exec.Cmd
 }
 
 func NewContainer(ctx *cli.Context) *Container {
-	config, sockets := NewOpts(ctx.String("command"), uint32(ctx.Int("uid")), ctx.Path("mount"))
+	config, sockets := NewOpts(ctx.String("command"), ctx.Int("uid"), ctx.Path("mount"))
 	// TODO to pass ipc.go
 	// sender := os.NewFile(uintptr(config.fd), "")
 
@@ -63,14 +63,14 @@ func NewContainer(ctx *cli.Context) *Container {
 }
 
 func (c *Container) create() (err error) {
-	cmd, err := ExecProcess(c.config)
+	log.Logger.Debugf("c.config.fd.Name() is %s", c.config.fd.Name())
+	cmd, err := ExecProcess(&c.config)
 	if err != nil {
 		log.Logger.Infof("Unable to create child process %s", err)
 		return err
 	}
 
-	log.Logger.Infof("calling handlechilduidmap: %s", c.sockets[0])
-	HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
+	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
 	return nil
@@ -82,14 +82,9 @@ func (c *Container) setProcess(cmd *exec.Cmd) {
 
 func (c *Container) cleanExit() (err error) {
 	log.Logger.Debug("Exiting...")
-	if err := syscall.Close(c.sockets[0]); err != nil {
-		log.Logger.Infof("Unable to close write socket %s", err)
-		return err
-	}
 
-	log.Logger.Debugf("c.sockets is %t", c.sockets)
-	if err := syscall.Close(c.sockets[1]); err != nil {
-		log.Logger.Infof("Unable to close read socket %s", err)
+	if err := c.sockets[0].Close(); err != nil {
+		log.Logger.Infof("Unable to close write socket %s", err)
 		return err
 	}
 
@@ -101,7 +96,8 @@ func (c *Container) cleanExit() (err error) {
 }
 
 func Start(ctx *cli.Context) {
-	cmd, err := ChildProcess(ctx)
+	c := NewContainer(ctx)
+	cmd, err := ChildProcess(&c.config)
 	if err != nil {
 		l.Fatal(err)
 	}
@@ -132,6 +128,7 @@ func Initialize(ctx *cli.Context) {
 		// os.Exit(1)
 	}
 
+	log.Logger.Infof("calling handlechilduidmap: %s", c.sockets[0])
 	HandleChildUidMap(c.childProcess.Process.Pid, c.sockets[0])
 	log.Logger.Debug("Creation finished")
 	c.cleanExit()

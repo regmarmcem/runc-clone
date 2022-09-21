@@ -1,29 +1,15 @@
 package util
 
 import (
-	"net"
 	"os"
 	"regmarmcem/runc-clone/pkg/log"
+	"strconv"
 )
 
-func SendBoolean(fd int, boolean bool) (err error) {
-	var data []byte
-	var conn net.Conn
+func SendBoolean(fd *os.File, data bool) (err error) {
 
-	f := os.NewFile(uintptr(fd), "")
-	if conn, err = net.FileConn(f); err != nil {
-		log.Logger.Infof("Failed to FileConn: %s", err)
-		return err
-	}
-	defer conn.Close()
-
-	if boolean {
-		data = []byte("1")
-	} else {
-		data = []byte("0")
-	}
-
-	if _, err = conn.Write(data); err != nil {
+	log.Logger.Debugf("data is %s", data)
+	if _, err = fd.WriteString(strconv.FormatBool(data)); err != nil {
 		log.Logger.Infof("Failed to send data: %s", err)
 		return err
 	}
@@ -31,22 +17,18 @@ func SendBoolean(fd int, boolean bool) (err error) {
 	return nil
 }
 
-func RecvBoolean(fd int) bool {
-	data := []byte("0")
-	var conn net.Conn
-	var err error
+func RecvBoolean(fd *os.File) bool {
+	buf := make([]byte, 1)
 
-	f := os.NewFile(uintptr(fd), "")
-	if conn, err = net.FileConn(f); err != nil {
-		log.Logger.Infof("Failed to FileConn: %s", err)
-		return false
-	}
-	defer conn.Close()
-
-	if _, err = conn.Read(data); err != nil {
+	if _, err := fd.Read(buf); err != nil {
 		log.Logger.Infof("Failed to read data: %s", err)
 		return false
 	}
 
-	return true
+	b, err := strconv.ParseBool(string(buf))
+	if err != nil {
+		log.Logger.Infof("Failed to read data: %s", err)
+		return false
+	}
+	return b
 }
