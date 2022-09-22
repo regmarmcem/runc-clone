@@ -63,10 +63,13 @@ func HandleChildUidMap(pid int, fd *os.File) error {
 	// r := util.RecvBoolean(fd)
 	// log.Logger.Debugf("received handle is: %s", r)
 	// UID/GID map
-	err := os.Mkdir(fmt.Sprintf("/proc/%d", pid), 0555)
-	if err != nil {
-		log.Logger.Debugf("mkdir /proc/$$ failed: %s", err)
-		return errors.New(("NamespaceError(4)"))
+	d := fmt.Sprintf("/proc/%d", pid)
+	if !Exists(d) {
+		err := os.Mkdir(fmt.Sprintf("/proc/%d", pid), 0555)
+		if err != nil {
+			log.Logger.Debugf("mkdir /proc/$$ failed: %s", err)
+			return errors.New(("NamespaceError(4)"))
+		}
 	}
 
 	uf, err := os.Create(fmt.Sprintf("/proc/%d/%s", pid, "uid_map"))
@@ -82,12 +85,12 @@ func HandleChildUidMap(pid int, fd *os.File) error {
 
 	gf, err := os.Create(fmt.Sprintf("/proc/%d/%s", pid, "gid_map"))
 	if err != nil {
-		log.Logger.Debugf("gf create pid, pid_map failed %s", err)
+		log.Logger.Debugf("gf create pid, pid_map failed: %s", err)
 		return errors.New(("NamespaceError(6)"))
 	}
 	_, err = gf.WriteString(fmt.Sprintf("0 %d %d", USERNS_OFFSET, USERNS_COUNT))
 	if err != nil {
-		log.Logger.Debugf("gf USERNS_OFFSET, USERNS_COUNT failed %s", err)
+		log.Logger.Debugf("gf USERNS_OFFSET, USERNS_COUNT failed: %s", err)
 		return errors.New("NamespaceError(7)")
 	}
 	log.Logger.Debug("Namespace creation succeed")
