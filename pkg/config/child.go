@@ -57,11 +57,6 @@ func ExecProcess(c *ContainerOpts) (cmd *exec.Cmd, err error) {
 	}
 	// close one of sockpair: config.fd is sockets[1]
 	log.Logger.Infof("Closing c.fd")
-	// err = c.fd.Close()
-	// if err != nil {
-	// log.Logger.Infof("Unable to close fd %s", err)
-	// return nil, err
-	// }
 
 	cmd = exec.Command(c.path, c.argv...)
 	log.Logger.Debugf("cmd %s", cmd)
@@ -75,6 +70,7 @@ func ExecProcess(c *ContainerOpts) (cmd *exec.Cmd, err error) {
 			syscall.CLONE_NEWIPC |
 			syscall.CLONE_NEWNET |
 			syscall.CLONE_NEWUTS,
+		// syscall.CLONE_NEWUSER,
 	}
 
 	user, err := user.LookupId(strconv.Itoa(int(c.uid)))
@@ -92,7 +88,6 @@ func ExecProcess(c *ContainerOpts) (cmd *exec.Cmd, err error) {
 	}
 
 	gid := uint32(gidi)
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
 	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(c.uid), Gid: gid}
 
 	log.Logger.Infof("cmd is %v\n", cmd)

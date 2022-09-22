@@ -70,7 +70,6 @@ func (c *Container) create() (err error) {
 		return err
 	}
 
-	// HandleChildUidMap(cmd.Process.Pid, c.sockets[0])
 	c.setProcess(cmd)
 	log.Logger.Debug("Creation finished")
 	return nil
@@ -129,6 +128,7 @@ func Initialize(ctx *cli.Context) {
 	}
 
 	log.Logger.Infof("calling handlechilduidmap: %s", c.sockets[0])
+	log.Logger.Infof("c.childProcess.Process.Pid: %s", c.childProcess)
 	HandleChildUidMap(c.childProcess.Process.Pid, c.sockets[0])
 	log.Logger.Debug("Creation finished")
 	c.cleanExit()
