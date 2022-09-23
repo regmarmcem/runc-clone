@@ -16,10 +16,6 @@ const USERNS_COUNT uint64 = 2000
 func UserNs(fd *os.File, uid int) error {
 
 	log.Logger.Debug("UserNs RecvBoolean")
-	// r := util.RecvBoolean(fd)
-	// if !r {
-	// return errors.New("create namespace")
-	// }
 
 	var u *user.User
 	u, err := user.LookupId(strconv.Itoa(uid))
@@ -59,9 +55,6 @@ func UserNs(fd *os.File, uid int) error {
 func HandleChildUidMap(pid int, fd *os.File) error {
 
 	log.Logger.Debug("HandleChildUidMap")
-	// util.SendBoolean(fd, true)
-	// r := util.RecvBoolean(fd)
-	// log.Logger.Debugf("received handle is: %s", r)
 	// UID/GID map
 	d := fmt.Sprintf("/proc/%d", pid)
 	if !Exists(d) {
@@ -94,6 +87,5 @@ func HandleChildUidMap(pid int, fd *os.File) error {
 		return errors.New("NamespaceError(7)")
 	}
 	log.Logger.Debug("Namespace creation succeed")
-	// util.SendBoolean(fd, true)
 	return nil
 }

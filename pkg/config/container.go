@@ -124,7 +124,7 @@ func Initialize(ctx *cli.Context) {
 	log.Logger.Debug("runc-clone initialize method")
 	if err := waitChild(c.childProcess); err != nil {
 		log.Logger.Infof("Wait child failed %s", err)
-		// os.Exit(1)
+		os.Exit(1)
 	}
 
 	log.Logger.Infof("calling handlechilduidmap: %s", c.sockets[0])
